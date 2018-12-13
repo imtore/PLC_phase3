@@ -1,4 +1,7 @@
 package main.visitor.typeChecker;
 
-public class TypeChecker {
+import main.visitor.VisitorImpl;
+
+public class TypeChecker extends VisitorImpl {
+
 }
