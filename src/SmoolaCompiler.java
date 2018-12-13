@@ -22,7 +22,7 @@ public class SmoolaCompiler {
             }
             TypeChecker typeChecker = new TypeChecker();
             typeChecker.visit(program);
-            if( nameAnalyser.numOfErrors() != 0 ) {
+            if( typeChecker.numOfErrors() != 0 ) {
                 throw new CompileErrorException();
             }
             ASTPrinter printer = new ASTPrinter();
