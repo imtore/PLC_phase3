@@ -1,16 +1,17 @@
-package main.visitor.nameAnalyzer;
+package main.visitor.typeChecker;
 
 import main.ast.node.Program;
 import main.ast.node.declaration.ClassDeclaration;
 import main.symbolTable.*;
 import main.symbolTable.itemException.ItemNotFoundException;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 public class SymbolTableClassParentLinker {
 
-    public void findClassesParents( Program program )
+    public void findClassesParents( Program program)
     {
         Set<String> visitedClasses = new HashSet<>();
         for(ClassDeclaration classDeclaration: program.getClasses() )
@@ -38,8 +39,7 @@ public class SymbolTableClassParentLinker {
         }
         catch( ItemNotFoundException itemNotFound )
         {
-//            System.out.println( "error occurred in linking parents" );
-//            TODO: what to do in nameAnalyzer if parent didn't exist
+            prevSymTable.setPreSymbolTable(null);
         }
     }
 }
