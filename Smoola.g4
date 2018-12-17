@@ -265,7 +265,7 @@ grammar Smoola;
 		retMultipleOrExpr=expressionOrTemp[ $realOrExpr ]
 		{
 		    $multipleOrExpr = $retMultipleOrExpr.multipleOrExpr;
-            setPosition( $multipleOrExpr.orExpr , $retMultipleOrExpr.orExpr.getLine() , $retMultipleOrExpr.orExpr.getColNum() );
+            setPosition( $multipleOrExpr.orExpr , $retMultipleOrExpr.getLine() , $retMultipleOrExpr.getColNum() );
 		}
 	    |
 	    {
@@ -293,12 +293,12 @@ grammar Smoola;
 		retMultipleAndExpr=expressionAndTemp[ $realAndExpr ]
 		{
 		    $multipleAndExpr = $retMultipleAndExpr.multipleAndExpr;
-            setPosition( $multipleAndExpr.andExpr , $retMultipleAndExpr.andExpr.getLine() , $retMultipleAndExpr.andExpr.getColNum() );
+            setPosition( $multipleAndExpr.andExpr , $retMultipleAndExpr.getLine() , $retMultipleAndExpr.getColNum() );
 		}
 	    |
 	    {
             $multipleAndExpr = $andExpr;
-            setPosition( $multipleAndExpr.andExpr , $retMultipleAndExpr.andExpr.getLine() , $retMultipleAndExpr.andExpr.getColNum() );
+            setPosition( $multipleAndExpr.andExpr , $retMultipleAndExpr.getLine() , $retMultipleAndExpr.getColNum() );
 	    }
 	;
 
@@ -330,12 +330,12 @@ grammar Smoola;
 		 multipleEqExpr=expressionEqTemp[ $realEqExpr ]
 		 {
 		    $retMultipleEqExpr = $multipleEqExpr.retMultipleEqExpr;
-            setPosition( $multipleEqExpr , $retMultipleEqExpr.getLine() , $retMultipleEqExpr.getCharPositionInLine() );
+            setPosition( $multipleEqExpr.eqExpr , $retMultipleEqExpr.getLine() , $retMultipleEqExpr.getColNum() );
 		 }
 	    |
 	    {
 	        $retMultipleEqExpr = $eqExpr;
-            setPosition( $multipleEqExpr , $retMultipleEqExpr.getLine() , $retMultipleEqExpr.getCharPositionInLine() );
+            setPosition( $multipleEqExpr.eqExpr , $retMultipleEqExpr.getLine() , $retMultipleEqExpr.getColNum() );
 	    }
 	;
 
@@ -343,6 +343,7 @@ grammar Smoola;
 		addExpr=expressionAdd retMultipleCompExpr=expressionCmpTemp[ $addExpr.addExpr ]
 		{
 		    $compExpr = $retMultipleCompExpr.retMultipleCompExpr;
+            setPosition( $retMultipleCompExpr.compExpr , $retMultipleCompExpr.compExpr.getLine() , $retMultipleCompExpr.compExpr.getColNum() );
 		}
 	;
 
@@ -370,12 +371,12 @@ grammar Smoola;
 		    multipleCompExpr=expressionCmpTemp[ $realCompExpr ]
 		    {
 		        $retMultipleCompExpr = $multipleCompExpr.retMultipleCompExpr;
-                setPosition( $multipleCompExpr , $retMultipleCompExpr.getLine() , $retMultipleCompExpr.getCharPositionInLine() );
+                setPosition( $multipleCompExpr.compExpr , $retMultipleCompExpr.getLine() , $retMultipleCompExpr.getColNum() );
 		    }
             |
             {
                 $retMultipleCompExpr = $compExpr;
-                setPosition( $multipleCompExpr , $retMultipleCompExpr.getLine() , $retMultipleCompExpr.getCharPositionInLine() );
+                setPosition( $multipleCompExpr.compExpr , $retMultipleCompExpr.getLine() , $retMultipleCompExpr.getColNum() );
             }
 	;
 
@@ -383,6 +384,7 @@ grammar Smoola;
 		multExpr=expressionMult multipleAddExpr=expressionAddTemp[ $multExpr.multExpr ]
 		{
 		    $addExpr = $multipleAddExpr.retMultipleAddExpr;
+            setPosition( $multipleAddExpr.addExpr , $multipleAddExpr.addExpr.getLine() , $multipleAddExpr.addExpr.getColNum() );
 		}
 	;
 
@@ -405,12 +407,12 @@ grammar Smoola;
 		multipleAddExpr=expressionAddTemp[ $realAddExpr ]
 		{
 		    $retMultipleAddExpr = $multipleAddExpr.retMultipleAddExpr;
-            setPosition( $multipleAddExpr , $retMultipleAddExpr.getLine() , $retMultipleAddExpr.getCharPositionInLine() );
+            setPosition( $multipleAddExpr.addExpr , $retMultipleAddExpr.getLine() , $retMultipleAddExpr.getColNum() );
 		}
 	    |
 	    {
 	        $retMultipleAddExpr = $addExpr;
-            setPosition( $multipleAddExpr , $retMultipleAddExpr.getLine() , $retMultipleAddExpr.getCharPositionInLine() );
+            setPosition( $multipleAddExpr.addExpr , $retMultipleAddExpr.getLine() , $retMultipleAddExpr.getColNum() );
 	    }
 	;
 
@@ -418,6 +420,7 @@ grammar Smoola;
 		unaryExpr=expressionUnary retMultipleMultExpr=expressionMultTemp[ $unaryExpr.unaryExpr ]
 		{
 		    $multExpr = $retMultipleMultExpr.retMultipleMultExpr;
+            setPosition( $retMultipleMultExpr.multExpr , $retMultipleMultExpr.multExpr.getLine() , $retMultipleMultExpr.multExpr.getColNum() );
 		}
 	;
 
