@@ -13,24 +13,17 @@ import main.ast.node.expression.Value.StringValue;
 import main.ast.node.statement.*;
 import main.symbolTable.SymbolTable;
 import main.visitor.VisitorImpl;
-import main.visitor.typeChecker.SymbolTableClassParentLinker;//fix
-import main.visitor.typeChecker.SymbolTableConstructor;//fix
-import main.visitor.typeChecker.TraverseState;
 
 import java.util.ArrayList;
 
 public class TypeChecker extends VisitorImpl {
-    private SymbolTableConstructor symConstructor;
     private TraverseState traverseState;
-    private SymbolTableClassParentLinker symTableClassLinker;
     private ArrayList<String> typeErrors;
 
     public TypeChecker()
     {
-        symConstructor = new SymbolTableConstructor();
-        symTableClassLinker = new SymbolTableClassParentLinker();
         typeErrors = new ArrayList<>();
-        setState( TraverseState.symbolTableConstruction );
+        setState( TraverseState.TypeAndUsageErrorCatching );
     }
     public int numOfErrors()
     {
@@ -39,9 +32,7 @@ public class TypeChecker extends VisitorImpl {
 
     private void switchState()
     {
-        if( traverseState.name().equals( TraverseState.symbolTableConstruction.toString() ) )
-            setState( TraverseState.ErrorCatching );
-        else if( traverseState.name().equals( TraverseState.ErrorCatching.toString() ) && typeErrors.size() != 0 )
+        if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) && typeErrors.size() != 0 )
             setState( TraverseState.PrintError );
         else
             setState( TraverseState.Exit );
@@ -65,11 +56,10 @@ public class TypeChecker extends VisitorImpl {
     @Override
     public void visit(Program program){//ok somehow
         //TODO: implement appropriate visit functionality
-        while( !traverseState.toString().equals( main.visitor.typeChecker.TraverseState.Exit.toString() )) {
-            if (traverseState.name().equals(main.visitor.typeChecker.TraverseState.symbolTableConstruction.toString()))
-                symConstructor.constructProgramSym();
-            else if (traverseState.name().equals(main.visitor.typeChecker.TraverseState.ErrorCatching.toString()))
-                symTableClassLinker.findClassesParents(program);//has a todo
+        while( !traverseState.toString().equals( main.visitor.typeChecker.TraverseState.Exit.toString() )){
+            if (traverseState.name().equals(TraverseState.TypeAndUsageErrorCatching.toString())) {
+                //TODO: still don't know
+            }
             else if( traverseState.name().equals( main.visitor.typeChecker.TraverseState.PrintError.toString() ) ) {
                 for (String error : typeErrors)
                     System.out.println(error);
@@ -87,10 +77,8 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( classDeclaration == null )
             return;
-        if( traverseState.name().equals( main.visitor.typeChecker.TraverseState.symbolTableConstruction.toString() ) )
-            symConstructor.construct( classDeclaration );
-        else if( traverseState.name().equals( main.visitor.typeChecker.TraverseState.ErrorCatching.toString() ) )
-            checkForParentExistence( classDeclaration );
+        else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
+            checkForParentExistence( classDeclaration );//TODO: implement function
         visitExpr( classDeclaration.getName() );
         visitExpr( classDeclaration.getParentName() );
         for( VarDeclaration varDeclaration: classDeclaration.getVarDeclarations() )
@@ -105,10 +93,8 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( methodDeclaration == null )
             return;
-        if( traverseState.name().equals( TraverseState.symbolTableConstruction.toString() ) )
-            symConstructor.construct( methodDeclaration );
-//        else if( traverseState.name().equals( TraverseState.ErrorCatching.toString() ) )
-//            checkForPropertyRedefinition( methodDeclaration );
+        else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
+            checkForPropertyRedefinition( methodDeclaration );
         for( VarDeclaration argDeclaration: methodDeclaration.getArgs() )
             visit( argDeclaration );
         for( VarDeclaration localVariable: methodDeclaration.getLocalVars() )
@@ -124,9 +110,7 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( mainMethodDeclaration == null )
             return;
-        if( traverseState.name().equals( TraverseState.symbolTableConstruction.toString() ) )
-            visit( ( MethodDeclaration ) mainMethodDeclaration );
-        else if( traverseState.name().equals( TraverseState.ErrorCatching.toString()) )
+        else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString()) )
             visit( ( MethodDeclaration ) mainMethodDeclaration );
         for( Statement statement : mainMethodDeclaration.getBody() )
             visitStatement( statement );
@@ -138,7 +122,7 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( varDeclaration == null )
             return;
-        if( traverseState.name().equals( TraverseState.ErrorCatching.toString() ) )
+        if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
             checkForPropertyRedefinition( varDeclaration );
         visitExpr( varDeclaration.getIdentifier() );
     }
