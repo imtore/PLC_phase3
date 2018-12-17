@@ -474,7 +474,7 @@ grammar Smoola;
             memExpr=expressionMem
             {
                 $unaryExpr = $memExpr.memExpr;
-                setPosition( $multipleMultExpr , $retMultipleMultExpr.getLine() , $retMultipleMultExpr.getCharPositionInLine() );
+                setPosition( $memExpr , $memExpr.getLine() , $memMultExpr.getColNum() );
             }
 	    )
 	;
@@ -483,6 +483,7 @@ grammar Smoola;
 		methodExpr=expressionMethods arrExpr=expressionMemTemp[ $methodExpr.methodExpr ]
 		{
 		    $memExpr = $arrExpr.realArrExpr;
+            setPosition( $memExpr , $memExpr.getLine() , $memMultExpr.getColNum() );
 		}
 	;
 
@@ -490,11 +491,12 @@ grammar Smoola;
 		'[' subscript=expression ']'
 		{
             $realArrExpr = new ArrayCall( $arrExpr , $subscript.finalExpr );
-            setPosition( $realArrExpr , $arrExpr.getLineNum() , $arrExpr.getColNum() );
+            setPosition( $subscript , $finalExpr.getLineNum() , $finalExpr.getColNum() );
 		}
 	    |
 	    {
             $realArrExpr = $arrExpr;
+            setPosition( $arrExpr , $arrExpr.getLineNum() , $arrExpr.getColNum() );
 	    }
 	;
 	expressionMethods returns[ Expression methodExpr ]:
