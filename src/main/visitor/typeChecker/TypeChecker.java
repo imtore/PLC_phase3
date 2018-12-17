@@ -13,6 +13,7 @@ import main.ast.node.expression.Value.StringValue;
 import main.ast.node.statement.*;
 import main.symbolTable.SymbolTable;
 import main.visitor.VisitorImpl;
+import sun.jvm.hotspot.debugger.cdbg.Sym;
 
 import java.util.ArrayList;
 
@@ -45,8 +46,15 @@ public class TypeChecker extends VisitorImpl {
 
     //TODO: some functions for error chatching
     private void checkForParentExistence(ClassDeclaration classDeclaration) {
-
+        String parent = classDeclaration.getParentName().getName();
+        SymbolTable classSymPre = SymbolTable.top.getPreSymbolTable();
+        if(parent!=null && classSymPre==null) {
+            typeErrors.add("Line:" + classDeclaration.getName().getLineNum() +
+                    ":class " + parent + " is not declared");
+        }
     }
+
+
 
     @Override
     public void visit(Node node) {
@@ -59,6 +67,7 @@ public class TypeChecker extends VisitorImpl {
         while( !traverseState.toString().equals( main.visitor.typeChecker.TraverseState.Exit.toString() )){
             if (traverseState.name().equals(TraverseState.TypeAndUsageErrorCatching.toString())) {
                 //TODO: still don't know
+                //guess there's nothing to do about this except in nameAnalyzer....
             }
             else if( traverseState.name().equals( main.visitor.typeChecker.TraverseState.PrintError.toString() ) ) {
                 for (String error : typeErrors)
