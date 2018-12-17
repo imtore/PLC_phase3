@@ -123,6 +123,7 @@ public class SymbolTableConstructor {
         try
         {
             SymbolTable.top.put( methodItem );
+
         }
         catch( ItemAlreadyExistsException methodDuplication )
         {

@@ -38,7 +38,7 @@ public class SymbolTableClassParentLinker {
         }
         catch( ItemNotFoundException itemNotFound )
         {
-//            System.out.println( "error occurred in linking parents" );
+            prevSymTable.setPreSymbolTable(null);
 //            TODO: what to do in nameAnalyzer if parent didn't exist
         }
     }
