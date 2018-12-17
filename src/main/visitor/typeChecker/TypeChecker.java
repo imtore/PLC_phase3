@@ -95,7 +95,7 @@ public class TypeChecker extends VisitorImpl {
         }
     }
 
-    private void checkWriteConditionType(Expression arg) {
+    private void checkWriteArgType(Expression arg) {
         if(!(arg.getType() instanceof IntType || arg.getType() instanceof StringType
                 || arg.getType() instanceof ArrayType || arg.getType() instanceof NoType)) {
             typeErrors.add("Line:" + arg.getLineNum() +
@@ -171,10 +171,18 @@ public class TypeChecker extends VisitorImpl {
         }
 
     }
-    private void checkRetrunType(MethodDeclaration methodDeclaration){
+    
+    private void checkReturnType(MethodDeclaration methodDeclaration){
         if (!T2isT1Subtype(methodDeclaration.getActualReturnType(), methodDeclaration.getReturnValue().getType())){
             typeErrors.add("Line:" + methodDeclaration.getReturnValue().getLineNum() +
                     ":" + methodDeclaration.getName().getName() + " return type must be " + methodDeclaration.getActualReturnType().toString());
+        }
+    }
+
+    private void validateLvalue(Expression lvalue){
+        if(!(lvalue instanceof ArrayCall || lvalue instanceof Identifier)){
+            typeErrors.add("Line:" + lvalue.getLineNum() +
+                    ":left side of assignment must be a valid lvalue");
         }
     }
 
@@ -225,7 +233,6 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(MethodDeclaration methodDeclaration) {
-        //TODO: implement appropriate visit functionality
         if( methodDeclaration == null )
             return;
         else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
@@ -237,7 +244,7 @@ public class TypeChecker extends VisitorImpl {
         for( Statement statement : methodDeclaration.getBody() )
             visitStatement( statement );
         visitExpr( methodDeclaration.getReturnValue() );
-        checkRetrunType(methodDeclaration);
+        checkReturnType(methodDeclaration);
         SymbolTable.pop();
     }
 
@@ -338,15 +345,8 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(NewArray newArray) {
-        //TODO: implement appropriate visit functionality
         if( newArray == null )
             return;
-        if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
-            if( newArray.getExpression() instanceof IntValue && ((IntValue) newArray.getExpression()).getConstant() <= 0 )
-            {
-                typeErrors.add( "Line:" + newArray.getExpression().getLineNum() + ":Array length should not be zero or negative" );
-                ((IntValue) newArray.getExpression()).setConstant( 0 );
-            }
         visitExpr( newArray.getExpression() );
     }
 
@@ -398,7 +398,6 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(Assign assign) {
-        //TODO: implement appropriate visit functionality
         if( assign == null )
             return;
         try {
@@ -406,7 +405,12 @@ public class TypeChecker extends VisitorImpl {
             visitExpr(lExpr);
             Expression rValExpr = assign.getrValue();
             if (rValExpr != null)
+                validateLvalue(lExpr);
                 visitExpr(rValExpr);
+                if(!T2isT1Subtype(lExpr.getType(), rValExpr.getType())) {
+                    typeErrors.add("Line:" + assign.getLineNum() +
+                            ":incompatible operands of type " + lExpr.getType().toString() + " and " + rValExpr.getType().toString());
+                }
         }
         catch( NullPointerException npe )
         {
@@ -446,7 +450,7 @@ public class TypeChecker extends VisitorImpl {
         if( write == null )
             return;
         visitExpr( write.getArg() );
-        checkWriteConditionType(write.getArg());
+        checkWriteArgType(write.getArg());
     }
 }
 
