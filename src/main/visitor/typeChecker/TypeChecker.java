@@ -165,6 +165,12 @@ public class TypeChecker extends VisitorImpl {
         }
     }
 
+    private void checkBinaryExpression(BinaryExpression binaryExpression){
+        if (binaryOperator.getBinaryOperator() == '*'){
+            if(!T2isT1Subtype(new IntType(), arrayCall.getIndex().getType()))
+        }
+
+    }
     private void checkRetrunType(MethodDeclaration methodDeclaration){
         if (!T2isT1Subtype(methodDeclaration.getActualReturnType(), methodDeclaration.getReturnValue().getType())){
             typeErrors.add("Line:" + methodDeclaration.getReturnValue().getLineNum() +
@@ -286,6 +292,7 @@ public class TypeChecker extends VisitorImpl {
         try {
             visitExpr(lOperand);
             visitExpr(rOperand);
+            checkBinaryExpression(binaryExpression);
         }
         catch( NullPointerException npe )
         {
@@ -301,10 +308,13 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(Length length) {
-        //TODO: implement appropriate visit functionality
         if( length == null )
             return;
         visitExpr( length.getExpression() );
+        if(!T2isT1Subtype(new ArrayType(), Length.getExpression().getType())){
+            typeErrors.add("Line:" + arrayCall.getExpression().getLineNum() +
+                    ":invalid use of length");
+            length.setType() = new NoType();
     }
 
     @Override
@@ -322,6 +332,8 @@ public class TypeChecker extends VisitorImpl {
             System.out.println( "syntax error occurred" );
         }
         //TODO: implement appropriate visit functionality
+        // does the class exists 
+        // does it have this method
     }
 
     @Override
@@ -353,11 +365,15 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(UnaryExpression unaryExpression) {
-        //TODO: implement appropriate visit functionality
         if( unaryExpression == null )
             return;
         try {
             visitExpr(unaryExpression.getValue());
+            if(!T2isT1Subtype(new IntType(), naryExpression.getValue().getType()){
+                typeErrors.add("Line:" + unaryExpression.getValue().getLineNum() +
+                        ":invalid use of unary expression , no valid type");
+                unaryExpression.getValue().setType() = new NoType();
+            }
         }
         catch( NullPointerException npe )
         {
