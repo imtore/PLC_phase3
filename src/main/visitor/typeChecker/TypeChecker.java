@@ -136,25 +136,25 @@ public class TypeChecker extends VisitorImpl {
                 return false;
         }
         else if(t1 instanceof ArrayType){
-            if(t2 instanceof ArrayType || t2 instanceof NoType)
+            if(t2 instanceof ArrayType)
                 return true;
             else
                 return false;
         }
         else if(t1 instanceof BooleanType){
-            if(t2 instanceof BooleanType || t2 instanceof NoType)
+            if(t2 instanceof BooleanType)
                 return true;
             else
                 return false;
         }
         else if(t1 instanceof IntType){
-            if(t2 instanceof IntType || t2 instanceof NoType)
+            if(t2 instanceof IntType)
                 return true;
             else
                 return false;
         }
         else if(t1 instanceof StringType){
-            if(t2 instanceof StringType || t2 instanceof NoType)
+            if(t2 instanceof StringType)
                 return true;
             else
                 return false;
@@ -255,19 +255,26 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(ArrayCall arrayCall) {
-        //TODO: implement appropriate visit functionality
         if( arrayCall == null )
             return;
         try {
             visitExpr( arrayCall.getInstance() );
+            if(!T2isT1Subtype(new ArrayType(), arrayCall.getInstance().getType())){
+                typeErrors.add("Line:" + arrayCall.getInstance().getLineNum() +
+                        ":invalid array access on a non array object");
+            }
             visitExpr( arrayCall.getIndex() );
+            if(!T2isT1Subtype(new IntType(), arrayCall.getIndex().getType())){
+                typeErrors.add("Line:" + arrayCall.getIndex().getLineNum() +
+                        ":array index must be of type int");
+            }
         }
         catch( NullPointerException npe )
         {
-            System.out.println( "instance or index is null" );
+            System.out.println( "instance or index is null" );//TODO: what to do if in type checking index or instance was null
         }
 
-    }
+    }//TODO: q inside
 
     @Override
     public void visit(BinaryExpression binaryExpression) {
