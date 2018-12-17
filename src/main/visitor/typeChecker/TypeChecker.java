@@ -1,5 +1,7 @@
 package main.visitor.typeChecker;
 
+import main.ast.Type.NoType;
+import main.ast.Type.UserDefinedType.UserDefinedType;
 import main.ast.node.Node;
 import main.ast.node.Program;
 import main.ast.node.declaration.ClassDeclaration;
@@ -11,9 +13,16 @@ import main.ast.node.expression.Value.BooleanValue;
 import main.ast.node.expression.Value.IntValue;
 import main.ast.node.expression.Value.StringValue;
 import main.ast.node.statement.*;
+import main.ast.Type.PrimitiveType.*;
+import main.ast.Type.ArrayType.*;
+import main.ast.Type.UserDefinedType.UserDefinedType;
+import main.ast.Type.Type;
+import main.symbolTable.ClassSymbolTableItem;
 import main.symbolTable.SymbolTable;
+import main.symbolTable.SymbolTableMethodItem;
+import main.symbolTable.itemException.ItemNotFoundException;
 import main.visitor.VisitorImpl;
-import sun.jvm.hotspot.debugger.cdbg.Sym;
+
 
 import java.util.ArrayList;
 
@@ -45,6 +54,31 @@ public class TypeChecker extends VisitorImpl {
     }
 
     //TODO: some functions for error chatching
+    private void enterScope(ClassDeclaration classDeclaration) {
+        String name = classDeclaration.getName().getName();
+        try {
+            ClassSymbolTableItem classItem = (ClassSymbolTableItem) SymbolTable.root.getInCurrentScope(ClassSymbolTableItem.CLASS + name);
+            SymbolTable next = classItem.getClassSym();
+            SymbolTable.push(next);
+        }
+        catch(ItemNotFoundException itemNotFound) {
+            System.out.println( "there is an error in pushing class symbol table" );
+        }
+    }
+
+    private void enterScope(MethodDeclaration methodDeclaration) {
+        String name = methodDeclaration.getName().getName();
+        try {
+            SymbolTableMethodItem methodItem = (SymbolTableMethodItem) SymbolTable.top.getInCurrentScope(SymbolTableMethodItem.METHOD + name);
+            SymbolTable next = methodItem.getMethodSymbolTable();
+            SymbolTable.push(next);
+        }
+        catch(ItemNotFoundException itemNotFound) {
+            System.out.println( "there is an error in pushing method symbol table" );
+        }
+    }
+
+
     private void checkForParentExistence(ClassDeclaration classDeclaration) {
         String parent = classDeclaration.getParentName().getName();
         SymbolTable classSymPre = SymbolTable.top.getPreSymbolTable();
@@ -54,11 +88,95 @@ public class TypeChecker extends VisitorImpl {
         }
     }
 
+    private void checkConditionType(Expression condition) {
+        if(!(condition.getType() instanceof  BooleanType) || !(condition.getType() instanceof NoType)) {
+            typeErrors.add("Line:" + condition.getLineNum() +
+                    ":condition type must be boolean");
+        }
+    }
+
+    private void checkWriteConditionType(Expression arg) {
+        if(!(arg.getType() instanceof IntType || arg.getType() instanceof StringType
+                || arg.getType() instanceof ArrayType || arg.getType() instanceof NoType)) {
+            typeErrors.add("Line:" + arg.getLineNum() +
+                    ":unsupported type for writeln");
+        }
+    }
+
+    private Boolean T2isT1Subtype(Type t1, Type t2){
+        if(t2 instanceof NoType || t1 instanceof NoType){
+            return true;
+        }
+        else if(t1 instanceof UserDefinedType){
+            if(t2 instanceof UserDefinedType){
+                Identifier currentType = ((UserDefinedType) t2).getName();
+                ClassSymbolTableItem parent = null;
+                ClassDeclaration current = ((UserDefinedType) t2).getClassDeclaration();
+                do {
+                    if(currentType==((UserDefinedType) t1).getName()){
+                        return true;
+                    }
+                    if(current.getParentName()!=null) {
+                        try {
+
+                            parent = (ClassSymbolTableItem) SymbolTable.root
+                                    .getInCurrentScope(ClassSymbolTableItem.CLASS + current.getParentName().getName());
+                            current = parent.getClassDeclaration();
+                            currentType = current.getName();
+                        } catch (ItemNotFoundException itemNotFound) {
+                            parent = null;
+                        }
+                    }
+                    else
+                        return false;
+                }while(parent!=null);
+                return false;
+            }
+            else
+                return false;
+        }
+        else if(t1 instanceof ArrayType){
+            if(t2 instanceof ArrayType || t2 instanceof NoType)
+                return true;
+            else
+                return false;
+        }
+        else if(t1 instanceof BooleanType){
+            if(t2 instanceof BooleanType || t2 instanceof NoType)
+                return true;
+            else
+                return false;
+        }
+        else if(t1 instanceof IntType){
+            if(t2 instanceof IntType || t2 instanceof NoType)
+                return true;
+            else
+                return false;
+        }
+        else if(t1 instanceof StringType){
+            if(t2 instanceof StringType || t2 instanceof NoType)
+                return true;
+            else
+                return false;
+        }
+        else{
+            System.out.println( "there is an error in checking subtyping" );
+            return false;
+        }
+    }
+
+    private void checkRetrunType(MethodDeclaration methodDeclaration){
+        if (!T2isT1Subtype(methodDeclaration.getActualReturnType(), methodDeclaration.getReturnValue().getType())){
+            typeErrors.add("Line:" + methodDeclaration.getReturnValue().getLineNum() +
+                    ":" + methodDeclaration.getName().getName() + " return type must be " + methodDeclaration.getActualReturnType().toString());
+        }
+    }
+
 
 
     @Override
     public void visit(Node node) {
-        //TODO: implement appropriate visit functionality
+
     }
 
     @Override
@@ -86,8 +204,10 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( classDeclaration == null )
             return;
-        else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
-            checkForParentExistence( classDeclaration );//TODO: implement function
+        else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) ) {
+            checkForParentExistence(classDeclaration);//TODO: implement function
+            enterScope(classDeclaration);
+        }
         visitExpr( classDeclaration.getName() );
         visitExpr( classDeclaration.getParentName() );
         for( VarDeclaration varDeclaration: classDeclaration.getVarDeclarations() )
@@ -103,7 +223,7 @@ public class TypeChecker extends VisitorImpl {
         if( methodDeclaration == null )
             return;
         else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
-            checkForPropertyRedefinition( methodDeclaration );
+            enterScope( methodDeclaration );
         for( VarDeclaration argDeclaration: methodDeclaration.getArgs() )
             visit( argDeclaration );
         for( VarDeclaration localVariable: methodDeclaration.getLocalVars() )
@@ -111,12 +231,12 @@ public class TypeChecker extends VisitorImpl {
         for( Statement statement : methodDeclaration.getBody() )
             visitStatement( statement );
         visitExpr( methodDeclaration.getReturnValue() );
+        checkRetrunType(methodDeclaration);
         SymbolTable.pop();
     }
 
     @Override
     public void visit(MainMethodDeclaration mainMethodDeclaration) {
-        //TODO: implement appropriate visit functionality
         if( mainMethodDeclaration == null )
             return;
         else if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString()) )
@@ -128,11 +248,8 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(VarDeclaration varDeclaration) {
-        //TODO: implement appropriate visit functionality
         if( varDeclaration == null )
             return;
-        if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
-            checkForPropertyRedefinition( varDeclaration );
         visitExpr( varDeclaration.getIdentifier() );
     }
 
@@ -205,10 +322,10 @@ public class TypeChecker extends VisitorImpl {
         //TODO: implement appropriate visit functionality
         if( newArray == null )
             return;
-        if( traverseState.name().equals( TraverseState.ErrorCatching.toString() ) )
+        if( traverseState.name().equals( TraverseState.TypeAndUsageErrorCatching.toString() ) )
             if( newArray.getExpression() instanceof IntValue && ((IntValue) newArray.getExpression()).getConstant() <= 0 )
             {
-                nameErrors.add( "Line:" + newArray.getExpression().getLineNum() + ":Array length should not be zero or negative" );
+                typeErrors.add( "Line:" + newArray.getExpression().getLineNum() + ":Array length should not be zero or negative" );
                 ((IntValue) newArray.getExpression()).setConstant( 0 );
             }
         visitExpr( newArray.getExpression() );
@@ -276,7 +393,6 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(Block block) {
-        //TODO: implement appropriate visit functionality
         if( block == null )
             return;
         for( Statement blockStat : block.getBody() )
@@ -285,31 +401,30 @@ public class TypeChecker extends VisitorImpl {
 
     @Override
     public void visit(Conditional conditional) {
-        //TODO: implement appropriate visit functionality
         if( conditional == null )
             return;
         visitExpr( conditional.getExpression() );
+        checkConditionType(conditional.getExpression());
         visitStatement( conditional.getConsequenceBody() );
         visitStatement( conditional.getAlternativeBody() );
     }
 
     @Override
     public void visit(While loop) {
-        //TODO: implement appropriate visit functionality
         if( loop == null )
             return;
         visitExpr( loop.getCondition() );
+        checkConditionType(loop.getCondition());
         visitStatement( loop.getBody() );
-
     }
 
     @Override
     public void visit(Write write) {
-        //TODO: implement appropriate visit functionality
         if( write == null )
             return;
         visitExpr( write.getArg() );
+        checkWriteConditionType(write.getArg());
     }
 }
 
-}
+

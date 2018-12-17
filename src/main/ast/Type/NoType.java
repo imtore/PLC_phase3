@@ -1,5 +1,8 @@
 package main.ast.Type;
 
-public abstract class NoType extends Type{
-
+public class NoType extends Type{
+    @Override
+    public String toString() {
+        return "NoType";
+    }
 }
