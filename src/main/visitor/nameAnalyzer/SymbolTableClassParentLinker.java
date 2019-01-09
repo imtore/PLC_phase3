@@ -39,7 +39,6 @@ public class SymbolTableClassParentLinker {
         catch( ItemNotFoundException itemNotFound )
         {
             prevSymTable.setPreSymbolTable(null);
-//            TODO: what to do in nameAnalyzer if parent didn't exist
         }
     }
 }

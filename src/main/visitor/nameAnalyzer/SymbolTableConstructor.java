@@ -22,7 +22,7 @@ public class SymbolTableConstructor {
     }
     public void construct(ClassDeclaration classDeclaration )
     {
-        SymbolTable classSymTable = new SymbolTable( SymbolTable.top );
+        SymbolTable classSymTable = new SymbolTable( null );
         ClassSymbolTableItem classItem = new ClassSymbolTableItem( classDeclaration );
         try {
             classItem.setSymbolTable( classSymTable );

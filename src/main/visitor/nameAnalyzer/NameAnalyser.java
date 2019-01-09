@@ -179,8 +179,8 @@ public class NameAnalyser extends VisitorImpl {
             else if (traverseState.name().equals(TraverseState.redefinitionAndArrayErrorCatching.toString()))
                 symTableClassLinker.findClassesParents(program);
             else if( traverseState.name().equals( TraverseState.PrintError.toString() ) ) {
-                for (String error : nameErrors)
-                    System.out.println(error);
+//                for (String error : nameErrors)
+//                    System.out.println(error);
                 return;
             }
             this.visit(program.getMainClass());
@@ -210,6 +210,7 @@ public class NameAnalyser extends VisitorImpl {
 
     @Override
     public void visit(MethodDeclaration methodDeclaration) {
+        //System.out.println("Method Declaration");
         //TODO: implement appropriate visit functionality
         if( methodDeclaration == null )
             return;
@@ -230,6 +231,7 @@ public class NameAnalyser extends VisitorImpl {
     @Override
     public void visit(MainMethodDeclaration mainMethodDeclaration) {
         //TODO: implement appropriate visit functionality
+        //System.out.println("Main Method Declaration");
         if( mainMethodDeclaration == null )
             return;
         if( traverseState.name().equals( TraverseState.symbolTableConstruction.toString() ) )
